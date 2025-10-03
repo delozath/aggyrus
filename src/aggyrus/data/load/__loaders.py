@@ -1,9 +1,14 @@
 import re
+import traceback
+
 
 
 import bioread
 
 import numpy as np
+
+
+from aggyrus.validation.errors import ChannelNotFound
 
 """
 Class biopac
@@ -24,9 +29,8 @@ class BiopacDriver:
         self.sr = record.samples_per_second  
         self.time = record.time_index  
         self.record = record  
-        self.subject = 'known'  
     
-    def decode(self, subject):
+    def decode(self):
         """
         Method to create a biopac instance, extract data, and assign a subject identifier.
 
@@ -36,28 +40,48 @@ class BiopacDriver:
             Identifier for the subject whose data is being decoded.
         """
         self._extract_data()  
-        self.subject = subject  
     
     def _extract_data(self):
         """
         Extracts channel data from the .acq file and organizes it into a structured format.
         """
-        chn_names = {}  
-        data = []  
-        for n, chan in enumerate(self.record.channels):
-            cname = re.match(r"(Channel )(\w+)(?=:)", str(chan))[2]
-            chn_names[cname] = n
-            data.append(chan.data)
-        self.chn_names = chn_names  
-        self.data = np.array(data)  
- 
+        names = [] 
+        data = []
+        for chan in self.record.channels:
+            if 'Channel' in str(chan):
+                names.append(chan.name)
+                data.append(chan.data)
+        self._names = {nm: n for n, nm in enumerate (names)}
+        self.names = np.array(names)  
+        self.data = np.array(data)
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            try:
+                idx = self._get_index(key)
+                return self.data[idx]
+            except ChannelNotFound as e:
+                print(e.with_traceback())
+        elif isinstance(key, (list, tuple, np.ndarray)):
+            #if all(map(lambda k: isinstance(k, str), key)):
+            keys_idx = [self._get_index(k) for k in key]
+            return self.data[keys_idx]
+        else:
+            raise TypeError("key types expected: str | list[str] | tuple[str] | np.ndarray[U]")
+    
+    def _get_index(self, key):
+        if key in self.names:
+            return self._names[key]
+        else:
+            raise ChannelNotFound(f"Channel {key} not found...")
+
+
 class EPPSignalBiopac(BiopacDriver):
     CHANN = ['ECG_A', 'PPG_1', 'PPG_2', 'BP', 'SPO2_1', 'SPO2_2']
     
     def __init__(self, fname):
         super().__init__(fname)
+
         match = re.search(r'([^/]+)(?=\.[^/.]+$)', fname)
-        subject = match.group(0)
-        self.decode(subject)
-        channels = (lambda names: [names[chn] for chn in EPPSignalBiopac.CHANN])(self.chn_names)
-        self.data = self.data[channels]
+        self.subject = match.group(0)
+        self.decode()        
