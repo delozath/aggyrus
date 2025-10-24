@@ -13,7 +13,7 @@ import numpy as np
 
 from aggyrus.validation.errors import ChannelNotFound
 
-class BiosignalDriver:
+class BiosignalDriver(ABC):
     def __init__(self, sr, time, signals, names) -> None:
         self._sr = sr
         self._time = time
