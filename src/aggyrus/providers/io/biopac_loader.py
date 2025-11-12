@@ -19,7 +19,7 @@ class BiopacLoader(BaseSignalLoader):
             self,
             source: str | Path,
             /, 
-            id = None,
+            ID = None,
             metadata = None,
             segments = None,
             annotations = None,
@@ -28,22 +28,22 @@ class BiopacLoader(BaseSignalLoader):
         data, chn_names = self._decode(record)
        
         sr = record.samples_per_second
-        #params =
-
-        raise NotImplementedError("Aqui me quede")
+        params = self._get_parameters(ID, metadata, segments, annotations)
 
         signal = BiomedicalSignal(
             data=data,
             sr=sr,
             chn_names=chn_names,
-            id=id,
-            metadata=metadata if metadata is not None else {},
-            segments=segments if,
-            annotations=annotations,
+            **params
         )
-
-        breakpoint()
+        
         return signal
+    
+    def _get_parameters(self, ID, metadata, segments, annotations) -> Dict:
+        keys  = ["ID", "metadata", "segments", "annotations"]
+        values  = [ID, metadata, segments, annotations]
+        params = {k: v for k, v in zip(keys, values) if v is not None}
+        return params
 
     def _decode(self, record):
         chn_names = [] 

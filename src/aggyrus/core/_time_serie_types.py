@@ -26,6 +26,6 @@ class SegmentedTimeSeries(BaseTimeSeries):
     segments: NDArray[np.float64 | np.float32] = field(default_factory=lambda: np.array([]))
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BiomedicalSignal(LabeledTimeSeries, AnnotatedTimeSeries, SegmentedTimeSeries):
     id: str | int | None = None
