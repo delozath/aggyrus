@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import override
 
-@abstractmethod
-class BaseDescriptor:
+
+class BaseDescriptor(ABC):
     def __set_name__(self, owner, name):
         self.name = name
         self.private_name = '_' + name
@@ -28,6 +28,9 @@ class BaseDescriptor:
 
 
 class MutableDescr(BaseDescriptor):
+    @override
+    def _validate(self, obj, value):...
+    
     def __set__(self, obj, value):
         setattr(obj, self.private_name, value)
 

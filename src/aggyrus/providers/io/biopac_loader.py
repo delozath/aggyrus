@@ -1,19 +1,23 @@
-from typing import Iterable, Sequence, Tuple, List, Dict, override
+from typing import Iterable, Dict, override
 
 from pathlib import Path
 
 
 import numpy as np
-from numpy.typing import NDArray
 
 import bioread
 
 
+from aggyrus.core.validations.descriptors import TypedMutableDescr
+from aggyrus.core.signals._time_serie_types import BaseTimeSeries
+from aggyrus.core.signals._time_serie_types import BiomedicalSignalRecord
+from aggyrus.spi.errors import IOProviderError
 from aggyrus.spi.io import BaseSignalLoader
-from aggyrus.core._time_serie_types import BaseTimeSeries
-from aggyrus.api.signals import BiomedicalSignal
+
 
 class BiopacLoader(BaseSignalLoader):
+    record = TypedMutableDescr(BiomedicalSignalRecord)
+
     @override
     def decode(
             self,
@@ -24,20 +28,23 @@ class BiopacLoader(BaseSignalLoader):
             segments = None,
             annotations = None,
          ) -> BaseTimeSeries:
-        record = bioread.read(source)
-        data, chn_names = self._decode(record)
-       
-        sr = record.samples_per_second
-        params = self._get_parameters(ID, metadata, segments, annotations)
+        try:
+            loader = bioread.read(source)
+        except Exception as e:
+            raise IOProviderError(f"An error occurred while reading the Biopac file: {e}") from e
+        else:            
+            data, chn_names = self._decode(loader)
+            sr = loader.samples_per_second
+            params = self._get_parameters(ID, metadata, segments, annotations)
 
-        signal = BiomedicalSignal(
-            data=data,
-            sr=sr,
-            chn_names=chn_names,
-            **params
-        )
-        
-        return signal
+            record = BiomedicalSignalRecord(
+                data=data,
+                sr=sr,
+                chn_names=chn_names,
+                **params
+            )
+            self.record = record
+            return record
     
     def _get_parameters(self, ID, metadata, segments, annotations) -> Dict:
         keys  = ["ID", "metadata", "segments", "annotations"]
@@ -58,17 +65,6 @@ class BiopacLoader(BaseSignalLoader):
 
         return data, chn_names
 
-    override
-    def batch(self, sources: Iterable[str | Path], options: None = None) -> Iterable[BaseTimeSeries]:
-        # Implement batch loading logic for Biopac files
-        pass
-    
     @override
-    def windowed(
-        self,
-        source: str | Path,
-        segments: Sequence[Tuple[float, float]],
-        options: None = None
-    ) -> List[BaseTimeSeries]:
-        # Implement windowed loading logic for Biopac files
-        pass
+    def batch(self, sources: Iterable[str | Path], options: None = None) -> Iterable[BaseTimeSeries]:
+        raise NotImplementedError("This class only supports single file loading")

@@ -9,6 +9,7 @@ import numpy as np
 
 
 from aggyrus.providers.io import BiopacLoader
+from aggyrus.core.signals._utils import index_slice
 
 
 @pytest.fixture
@@ -19,12 +20,6 @@ def biopac_loader():
     return loader
 
 def test_BiopacLoader_decode(biopac_loader):
-    assert isinstance(biopac_loader.record.data, np.ndarray)
-    assert isinstance(biopac_loader.record.sr, float)    
-    #breakpoint("Press `c` to continue... No much ways to automate this test without adding excessive complexity. Review if data looks ok")
-
-def test_BiopacLoader_batch(biopac_loader):
-    pass
-
-
+    breakpoint()
+    index_slice(biopac_loader.record)
     

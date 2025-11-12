@@ -1,32 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, Sequence, Tuple, List
+from typing import Iterable
 
 from pathlib import Path
 
 
-import numpy as np
-from numpy.typing import NDArray
-
-
-from aggyrus.core._time_serie_types import BaseTimeSeries
-
-
-class IOProviderError(Exception):
-    """
-    Exception raised for errors in the IO provider from external libraries.
-    """
-    def __init__(self, message: str):
-        print("IOProverderError raised")
-        super().__init__(message)
-
-
-class IOWindowrError(Exception):
-    """
-    Exception raised when the segments attempted to fetch are outside the signal duration.
-    """
-    def __init__(self, message: str):
-        print("The segments attempted to fetch is outside signal duration")
-        super().__init__(message)
+from aggyrus.core.signals._time_serie_types import BaseTimeSeries
 
 
 class BaseSignalLoader(ABC):
@@ -74,43 +52,3 @@ class BaseSignalLoader(ABC):
             The read signal as a BaseTimeSeries object.    
         """
         ...
-
-    @abstractmethod
-    def windowed(
-        self,
-        source: str | Path,
-        windows: Sequence[Tuple[float | int, float | int]] | NDArray[np.float64 | np.float32 | np.int64] | None = None,
-    ) -> Iterable[BaseTimeSeries] | NDArray[np.float64 | np.float32] | List[NDArray]:
-        """
-        Abstract Protocol method to read specific windows of a signal from a given source.
-        
-        Parameters
-        ----------
-        source : str | Path
-            The path or identifier of the signal source.
-        windows : Sequence[Tuple[float, float]] | NDArray[np.float64 | np.float32] | None, optional
-            The windows to read from the signal, by default None. It represents all pairs of (start, end) in seconds (floats) or samples (ints). Note means the entire signal.
-        
-        Yields
-        ------
-        BaseTimeSeries
-            The windowed signal as a BaseTimeSeries object.
-        
-        
-        Returns
-        -------
-            NumPy arrays or list of NumPy arrays containing the windowed signal data.
-        
-        Raises
-        ------
-        IOWindowrError
-            If the segments attempted to fetch are outside the signal duration.
-        """
-        ...
-
-
-__all__ = [
-    "BaseSignalLoader",
-    "IOProviderError",
-    "IOWindowrError",
-]

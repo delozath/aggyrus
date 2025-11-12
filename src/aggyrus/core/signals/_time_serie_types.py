@@ -27,5 +27,5 @@ class SegmentedTimeSeries(BaseTimeSeries):
 
 
 @dataclass(kw_only=True)
-class BiomedicalSignal(LabeledTimeSeries, AnnotatedTimeSeries, SegmentedTimeSeries):
+class BiomedicalSignalRecord(LabeledTimeSeries, AnnotatedTimeSeries, SegmentedTimeSeries):
     id: str | int | None = None
