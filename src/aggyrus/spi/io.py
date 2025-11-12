@@ -30,8 +30,9 @@ class IOWindowrError(Exception):
 
 
 class BaseSignalLoader(ABC):
+    #def decode(self, source: str | Path, options: None = None) -> BaseTimeSeries:
     @abstractmethod
-    def decode(self, source: str | Path, options: None = None) -> BaseTimeSeries: 
+    def decode(self, source: str | Path, /, *args, **kwargs) -> BaseTimeSeries: 
         """
         Abstract Protocol method to read a signal from a given source.
 
@@ -39,8 +40,8 @@ class BaseSignalLoader(ABC):
         ----------
         source : str | Path
             The path or identifier of the signal source.
-        options : None, optional
-            Additional options for reading the signal, by default None.
+        kwargs : dict, optional
+            Additional options for reading the signal.
         
         Raises
         ------
@@ -78,8 +79,8 @@ class BaseSignalLoader(ABC):
     def windowed(
         self,
         source: str | Path,
-        windows: Sequence[Tuple[float | int, float | int]] | NDArray[np.float_ | np.int_] | None = None,
-    ) -> Iterable[BaseTimeSeries] | NDArray[np.float_] | List[NDArray]:
+        windows: Sequence[Tuple[float | int, float | int]] | NDArray[np.float64 | np.float32 | np.int64] | None = None,
+    ) -> Iterable[BaseTimeSeries] | NDArray[np.float64 | np.float32] | List[NDArray]:
         """
         Abstract Protocol method to read specific windows of a signal from a given source.
         
@@ -87,7 +88,7 @@ class BaseSignalLoader(ABC):
         ----------
         source : str | Path
             The path or identifier of the signal source.
-        windows : Sequence[Tuple[float, float]] | NDArray[np.float_] | None, optional
+        windows : Sequence[Tuple[float, float]] | NDArray[np.float64 | np.float32] | None, optional
             The windows to read from the signal, by default None. It represents all pairs of (start, end) in seconds (floats) or samples (ints). Note means the entire signal.
         
         Yields

@@ -1,4 +1,4 @@
-from typing import Iterable, Sequence, Tuple, List, override
+from typing import Iterable, Sequence, Tuple, List, Dict, override
 
 from pathlib import Path
 
@@ -15,11 +15,35 @@ from aggyrus.api.signals import BiomedicalSignal
 
 class BiopacLoader(BaseSignalLoader):
     @override
-    def decode(self, source: str | Path, options: None = None) -> BaseTimeSeries:
+    def decode(
+            self,
+            source: str | Path,
+            /, 
+            id = None,
+            metadata = None,
+            segments = None,
+            annotations = None,
+         ) -> BaseTimeSeries:
         record = bioread.read(source)
         data, chn_names = self._decode(record)
-        raise NotImplementedError("Aqui me quede en el desarrollo")
+       
+        sr = record.samples_per_second
+        #params =
+
+        raise NotImplementedError("Aqui me quede")
+
+        signal = BiomedicalSignal(
+            data=data,
+            sr=sr,
+            chn_names=chn_names,
+            id=id,
+            metadata=metadata if metadata is not None else {},
+            segments=segments if,
+            annotations=annotations,
+        )
+
         breakpoint()
+        return signal
 
     def _decode(self, record):
         chn_names = [] 

@@ -6,8 +6,8 @@ from numpy.typing import NDArray
 
 @dataclass
 class BaseTimeSeries:
-    data: NDArray[np.float_]
-    fs: float
+    data: NDArray[np.float64 | np.float32]
+    sr: float
     metadata: Dict = field(default_factory=dict)
 
 
@@ -18,12 +18,12 @@ class LabeledTimeSeries(BaseTimeSeries):
 
 @dataclass
 class AnnotatedTimeSeries(BaseTimeSeries):
-    annotations: NDArray[np.float_] = field(default_factory=lambda: np.array([]))
+    annotations: NDArray[np.float64 | np.float32] = field(default_factory=lambda: np.array([]))
 
 
 @dataclass
 class SegmentedTimeSeries(BaseTimeSeries):
-    segments: NDArray[np.float_] = field(default_factory=lambda: np.array([]))
+    segments: NDArray[np.float64 | np.float32] = field(default_factory=lambda: np.array([]))
 
 
 @dataclass
