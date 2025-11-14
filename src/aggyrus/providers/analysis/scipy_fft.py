@@ -34,10 +34,6 @@ class ScipyFFTAnalyzer(SpectrumAnalyzer):
     def plot(self, spectrum: SpectrumContainer, /, **kwargs) -> Any:
         plot_func = self._plot_factory(spectrum, **kwargs)
         plot_func(spectrum.freq, spectrum.magnitude)
-        plt.show()
-        breakpoint()
-        
-        plt.show()
         return plt.gcf()
     
     def _plot_factory(self, spectrum, size=(18, 6)) -> Any:

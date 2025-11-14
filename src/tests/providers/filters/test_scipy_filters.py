@@ -13,6 +13,7 @@ import neurokit2 as nk
 
 from aggyrus.spi.errors import FilterInitializerError
 
+EPS_FREQ = 0.1
 
 def gen_signal(duration=5, freqs=None, sr=100.0):
     if freqs is None:
@@ -92,9 +93,16 @@ def test_ButterworthFilter_apply(butterworth_filter):
     fft = ScipyFFTAnalyzer(sr=sr, mag_mode='dB')
     
     spectrum = fft.compute(signal)
-    fft.plot(spectrum)
-    nk.signal_plot(signals, sampling_rate=sr, subplots=True)
-    breakpoint()
+    spectrum_filt = fft.compute(filt_signal)
+    spectrum_filtfilt = fft.compute(filtfilt_signal)
 
+    fft.plot(spectrum, size=(12, 4))
+    fft.plot(spectrum_filt, size=(12, 4))
+    fft.plot(spectrum_filtfilt, size=(12, 4))
     plt.show()
-    breakpoint()
+    max_freqs =spectrum.freq[spectrum.magnitude > 0]
+    assert all((max_freqs - freqs)**2 < EPS_FREQ)
+    
+    nk.signal_plot(signals, sampling_rate=sr, subplots=True)
+    plt.show()
+    
