@@ -11,7 +11,7 @@ import bioread
 from aggyrus.core.validations.descriptors import TypedMutableDescr
 from aggyrus.core.signals._time_serie_types import BaseTimeSeries
 from aggyrus.core.signals._time_serie_types import BiomedicalSignalRecord
-from aggyrus.spi.errors import IOProviderError
+from aggyrus.spi.errors import IOProviderReadError
 from aggyrus.spi.io import BaseSignalLoader
 
 
@@ -31,7 +31,7 @@ class BiopacLoader(BaseSignalLoader):
         try:
             loader = bioread.read(source)
         except Exception as e:
-            raise IOProviderError(f"An error occurred while reading the Biopac file: {e}") from e
+            raise IOProviderReadError(f"An error occurred while reading the Biopac file: {e}") from e
         else:            
             data, chn_names = self._decode(loader)
             sr = loader.samples_per_second
