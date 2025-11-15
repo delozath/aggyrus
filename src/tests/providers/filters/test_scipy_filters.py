@@ -4,14 +4,15 @@ import pytest
 from matplotlib import pyplot as plt
 
 
-from aggyrus.providers.filters.scipy_filters import ButterworthFilter
+from aggyrus.providers.filters.scipy_filters import ButterworthFilter, Chebyshev1Filter
 from aggyrus.providers.analysis.scipy_fft import ScipyFFTAnalyzer
 
 import numpy as np
 import pandas as pd
-import neurokit2 as nk
+
 
 from aggyrus.spi.errors import FilterInitializerError
+
 
 EPS_FREQ = 0.1
 
@@ -29,14 +30,11 @@ def gen_signal(duration=5, freqs=None, sr=100.0):
 @pytest.fixture
 def butterworth_filter():
     filter_instance = ButterworthFilter()
-    """    
-    filter_instance.design(
-        order=4,
-        cutoff=np.array([0.1, 20]),
-        btype='bandpass',
-        sr=100.0,
-        analog=False
-    )"""
+    return filter_instance
+
+@pytest.fixture
+def chebyshev1_filter():
+    filter_instance = Chebyshev1Filter()
     return filter_instance
 
 def test_ButterworthFilter_design(butterworth_filter):
@@ -73,6 +71,44 @@ def test_ButterworthFilter_design(butterworth_filter):
         butterworth_filter.design(sr=10, cutoff=np.array([6, 10]))
 
 
+def filt_test_plot(x, x_filt, x_filtfilt, freqs, sr):
+    fft = ScipyFFTAnalyzer(sr=sr, mag_mode='dB')
+    
+    spectrum = fft.compute(x)
+    spectrum_filt = fft.compute(x_filt)
+    spectrum_filtfilt = fft.compute(x_filtfilt)
+
+    fft.plot(spectrum, size=(12, 4))
+    fft.plot(spectrum_filt, size=(12, 4))
+    fft.plot(spectrum_filtfilt, size=(12, 4))
+    plt.show()
+    max_freqs =spectrum.freq[spectrum.magnitude > 0]
+    assert all((max_freqs - freqs)**2 < EPS_FREQ)
+
+
+def test_Chebyshev1Filter_apply(chebyshev1_filter):
+    sr = 200.0
+    freqs = np.array([1.0, 5.0, 10.0, 25, 30, 80])
+    order = 8
+    chebyshev1_filter.design(
+        order=order,
+        cutoff=np.array([0.1, 20]),
+        btype='bandpass',
+        ripple=2.0,
+        sr=sr,
+        analog=False,
+        output='sos'
+    )
+    signal = gen_signal(freqs=freqs, sr=sr)
+    filt_signal = chebyshev1_filter.apply(signal, mode='filt')
+    filtfilt_signal = chebyshev1_filter.apply(signal, mode='filtfilt')
+    signals = pd.DataFrame([signal, filt_signal, filtfilt_signal]).T
+    signals.columns = ['Original Signal', 'Filtered Signal', 'Zero-phase filt Signal']
+    filt_test_plot(signal, filt_signal, filtfilt_signal, freqs, sr)
+
+    plt.show()
+    
+
 def test_ButterworthFilter_apply(butterworth_filter):
     sr = 200.0
     freqs = np.array([1.0, 5.0, 10.0, 25, 30, 80])
@@ -90,19 +126,7 @@ def test_ButterworthFilter_apply(butterworth_filter):
     filtfilt_signal = butterworth_filter.apply(signal, mode='filtfilt')
     signals = pd.DataFrame([signal, filt_signal, filtfilt_signal]).T
     signals.columns = ['Original Signal', 'Filtered Signal', 'Zero-phase filt Signal']
-    fft = ScipyFFTAnalyzer(sr=sr, mag_mode='dB')
-    
-    spectrum = fft.compute(signal)
-    spectrum_filt = fft.compute(filt_signal)
-    spectrum_filtfilt = fft.compute(filtfilt_signal)
 
-    fft.plot(spectrum, size=(12, 4))
-    fft.plot(spectrum_filt, size=(12, 4))
-    fft.plot(spectrum_filtfilt, size=(12, 4))
+    filt_test_plot(signal, filt_signal, filtfilt_signal, freqs, sr)
+
     plt.show()
-    max_freqs =spectrum.freq[spectrum.magnitude > 0]
-    assert all((max_freqs - freqs)**2 < EPS_FREQ)
-    
-    nk.signal_plot(signals, sampling_rate=sr, subplots=True)
-    plt.show()
-    

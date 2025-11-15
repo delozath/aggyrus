@@ -38,6 +38,28 @@ class ScipyLinearFilterContainer:
             raise FilterInitializerError("Cutoff frequency exceeds Nyquist limit.")
 
 
+@dataclass(kw_only=True)
+class ScipyChebyshev1FilterContainer(ScipyLinearFilterContainer):
+    ripple: float = 1.0
+
+    def __post_init__(self):
+        super().__post_init__()
+        if not isinstance(self.ripple, (float, int)) or self.ripple <= 0:
+            raise FilterInitializerError("Ripple must be a positive number.")
+
+
+@dataclass(kw_only=True)
+class ScipyFIRContainer(ScipyLinearFilterContainer):
+    ripple: float = 1.0
+
+    def __post_init__(self):
+        super().__post_init__()
+        if not isinstance(self.ripple, (float, int)) or self.ripple <= 0:
+            raise FilterInitializerError("Ripple must be a positive number.")
+
+
+numtaps, cutoff, width=None, window='hamming', pass_zero=True, scale=True, fs=None
+
 class BaseScipyFilter:
     filter_ = TypedMutableDescr(ScipyLinearFilterContainer)
     model: Any
@@ -87,4 +109,46 @@ class ButterworthFilter(BaseDigitalFilter, BaseScipyFilter):
         filt_signal = func(**params)
 
         return filt_signal
-    
+
+
+class Chebyshev1Filter(BaseDigitalFilter, BaseScipyFilter):
+    def __init__(self):
+        self.name = "chebyshev_type_1"
+
+    @override
+    def design(self, /, **kwargs) -> None:
+        self._filter_ = save_init_kwargs(ScipyChebyshev1FilterContainer, **kwargs)
+        self.model = sg.cheby1(
+                N=self._filter_.order,
+                rp=self._filter_.ripple,
+                Wn=self._filter_.cutoff,
+                btype=self._filter_.btype,
+                analog=self._filter_.analog,
+                output=self._filter_.output,
+                fs=self._filter_.sr
+         )
+
+    @override
+    def apply(
+        self,
+        signal: np.ndarray,
+        mode: Literal['filtfilt', 'filt']='filtfilt',
+        **kwargs
+     ) -> np.ndarray:
+        if not hasattr(self, 'model'):
+            raise FilterApplyModeError("Filter has not been designed yet. Call the `design` method first.")
+        if mode not in ['filtfilt', 'filt']:
+            raise FilterApplyModeError("Invalid mode specified. Use 'filtfilt' or 'filt'.")
+        
+        func, params = self._apply_factory(mode)
+        params |= {'x': signal} | kwargs
+        filt_signal = func(**params)
+
+        return filt_signal
+
+
+
+
+
+
+firwin(
