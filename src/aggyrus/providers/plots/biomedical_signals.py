@@ -32,7 +32,7 @@ class BiomedicalSignalPlot(BaseContainerPlot[BiomedicalSignalRecord]):
             if signal.data.shape[-1] == 1:
                 self._single_plot(signal.data.squeeze(), time)
             else:
-                self._subplots_signals(signal.data, time, **kwargs)
+                self._subplots_signals(signal, time, **kwargs)
             plt.legend()
         breakpoint()
     
@@ -45,13 +45,19 @@ class BiomedicalSignalPlot(BaseContainerPlot[BiomedicalSignalRecord]):
         plt.grid()
         plt.show()
     
-    def _subplots_signals(self, signal: np.ndarray, time: np.ndarray, /, **kwargs) -> Any:
-        num_channels = signal.shape[1]
+    def _subplots_signals(self, signal: BiomedicalSignalRecord, time: np.ndarray, /, **kwargs) -> Any:
+        num_channels = signal.data.shape[1]
+        name_channels = (
+            signal.chn_names 
+            if num_channels == len(signal.chn_names) 
+            else [f'channel_{c}' for c in range(num_channels)]
+        )
+        #breakpoint()
         fig, axes = plt.subplots(num_channels, 1, figsize=(18, 1.1 * num_channels), sharex=True)
-        for i, (ax, sig) in enumerate(zip(axes, signal.T)):
-            ax.plot(time, sig)
-            ax.set_title(f"Channel {i+1}")
-            ax.set_ylabel("Amplitude")
+        for i, (ax, x, cname) in enumerate(zip(axes, signal.data.T, name_channels)):
+            ax.plot(time, x, label=cname)
+            ax.set_title(f"{cname}", fontsize=10)
+            ax.set_ylabel("Amplitude", fontsize=8)
             ax.grid()
         axes[-1].set_xlabel("Time (s)")
         plt.tight_layout()

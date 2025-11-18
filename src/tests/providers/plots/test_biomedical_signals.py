@@ -38,7 +38,7 @@ def test_BiomedicalSignalPlot_plot_single_signal(signal_plot):
 
     signal_2 = gen_signal(freqs=np.array([2.0, 8.0, 15.0]))
     x = np.concatenate([signal[:, None], signal_2[:, None], signal[:, None], signal_2[:, None], signal[:, None], signal_2[:, None]], axis=1)
-    record_multi = BiomedicalSignalRecord(data=x, chn_names=["channel_1", "channel_2", "channel_3", "channel_4", "channel_5", "channel_6"], sr=SR)
+    record_multi = BiomedicalSignalRecord(data=x, chn_names=["channel_-1", "channel_-2", "channel_3", "channel_4", "channel_0", "channel_6"], sr=SR)
     result = signal_plot.plot(record_multi)
     breakpoint()
     assert result is None  # Assuming the plot method does not return anything
