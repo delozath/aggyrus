@@ -10,11 +10,54 @@ from aggyrus.core.signals._time_serie_types import BiomedicalSignalRecord
 from aggyrus.spi.plots import BaseContainerPlot
 
 class BiomedicalSignalPlot(BaseContainerPlot[BiomedicalSignalRecord]):
+    """
+    class for plotting biomedical signals.
+
+    Methods
+    -------
+    plot(signal: BiomedicalSignalRecord, /, size=None, **kwargs) -> Any
+        Plots the biomedical signal data.
+
+    show(/, **kwargs) -> None
+        Displays the plotted biomedical signal. 
+    """
+
     def plot(self, signal: BiomedicalSignalRecord, /, size=None, **kwargs) -> Any:
+        """
+        Plots the biomedical signal data. Generates time axis based on the signal's sampling rate.
+
+        Parameters
+        ----------
+        signal : BiomedicalSignalRecord
+            The biomedical signal record to be plotted.
+        size : tuple, optional
+            Size of the plot figure (width, height). Default is None.
+        **kwargs : dict
+            Additional keyword arguments for customization.
+
+        Returns
+        -------
+        Any
+        """
         time = np.arange(len(signal.data)) / signal.sr
         self._plot_factory(signal, time, **kwargs)
     
     def _plot_factory(self, signal: BiomedicalSignalRecord, time: np.ndarray, /, **kwargs) -> Any:
+        """
+        Factory method to determine the type of plot based on signal dimensions. If single channel, creates a single plot; if multi-channel, creates subplots.
+        
+        Parameters
+        ----------
+        signal : BiomedicalSignalRecord
+            The biomedical signal record to be plotted.
+        time : np.ndarray
+            The time axis for the signal data.
+        **kwargs : dict
+            Additional keyword arguments for customization.
+        
+        Returns
+        -------
+        Any"""
         if signal.data.ndim == 1:
             self._single_plot(signal.data, time, **kwargs)
         elif signal.data.ndim != 1:
@@ -34,6 +77,21 @@ class BiomedicalSignalPlot(BaseContainerPlot[BiomedicalSignalRecord]):
         
     
     def _subplots_signals(self, signal: BiomedicalSignalRecord, time: np.ndarray, /, **kwargs) -> Any:
+        """
+        Creates subplots for multi-channel biomedical signals.
+        
+        Parameters
+        ----------
+        signal : BiomedicalSignalRecord
+            The biomedical signal record to be plotted.
+        time : np.ndarray
+            The time axis for the signal data.
+        **kwargs : dict
+            Additional keyword arguments for customization.
+            
+        Returns
+        -------
+        Any"""
         num_channels = signal.data.shape[1]
         name_channels = (
             signal.chn_names 
