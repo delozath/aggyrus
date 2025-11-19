@@ -4,7 +4,7 @@ import pytest
 from matplotlib import pyplot as plt
 
 
-from aggyrus.providers.filters.scipy_filters import ButterworthFilter, Chebyshev1Filter
+from aggyrus.providers.filters.scipy_filters import ButterworthFilter, Chebyshev1Filter, FIRFilter
 from aggyrus.providers.analysis.scipy_fft import ScipyFFTAnalyzer
 
 import numpy as np
@@ -35,6 +35,11 @@ def butterworth_filter():
 @pytest.fixture
 def chebyshev1_filter():
     filter_instance = Chebyshev1Filter()
+    return filter_instance
+
+@pytest.fixture
+def fir_filter():
+    filter_instance = FIRFilter()
     return filter_instance
 
 def test_ButterworthFilter_design(butterworth_filter):
@@ -121,6 +126,44 @@ def test_ButterworthFilter_apply(butterworth_filter):
         analog=False,
         output='sos'
     )
+    signal = gen_signal(freqs=freqs, sr=sr)
+    filt_signal = butterworth_filter.apply(signal, mode='filt')
+    filtfilt_signal = butterworth_filter.apply(signal, mode='filtfilt')
+    signals = pd.DataFrame([signal, filt_signal, filtfilt_signal]).T
+    signals.columns = ['Original Signal', 'Filtered Signal', 'Zero-phase filt Signal']
+
+    filt_test_plot(signal, filt_signal, filtfilt_signal, freqs, sr)
+
+    plt.show()
+
+
+def test_FIRFilter_design(fir_filter):
+    sr = 200.0
+    freqs = np.array([1.0, 5.0, 10.0, 25, 30, 80])
+    order = 8
+    fir_filter.design(
+        order=order,
+        cutoff=np.array([0.1, 20]),
+        btype='bandpass',
+        sr=sr,
+        fir_type = 1,
+        window='hamming'
+    )
+    breakpoint()
+
+def test_FIRFilter_apply(fir_filter):
+    sr = 200.0
+    freqs = np.array([1.0, 5.0, 10.0, 25, 30, 80])
+    order = 8
+    fir_filter.design(
+        order=order,
+        cutoff=np.array([0.1, 20]),
+        btype='bandpass',
+        sr=sr,
+        fir_type = 1,
+        window='hamming'
+    )
+    breakpoint()
     signal = gen_signal(freqs=freqs, sr=sr)
     filt_signal = butterworth_filter.apply(signal, mode='filt')
     filtfilt_signal = butterworth_filter.apply(signal, mode='filtfilt')

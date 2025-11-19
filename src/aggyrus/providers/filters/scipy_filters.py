@@ -18,7 +18,7 @@ class ScipyLinearFilterContainer:
     cutoff: float | np.ndarray = field(default_factory = lambda: np.array([0.1, 20]))
     btype: Literal['lowpass' 'highpass', 'bandpass', 'bandstop'] = 'bandpass'
     sr: float = 100.0
-    output: Literal['ba', 'sos'] = 'sos'
+    output: Literal['ba', 'sos'] | None = 'sos'
     analog: bool = False
 
     def __post_init__(self):
@@ -32,7 +32,7 @@ class ScipyLinearFilterContainer:
             raise FilterInitializerError("Sampling frequency must be a positive number.")
         if not isinstance(self.analog, bool):
             raise FilterInitializerError("Analog flag must be a boolean value.")
-        if self.output not in ['ba', 'sos']:
+        if self.output not in ['ba', 'sos'] or self.output is None:
             raise FilterInitializerError("Output format must be 'ba', or 'sos'.")
         if self.sr <= 2 * np.max(self.cutoff):
             raise FilterInitializerError("Cutoff frequency exceeds Nyquist limit.")
@@ -50,15 +50,25 @@ class ScipyChebyshev1FilterContainer(ScipyLinearFilterContainer):
 
 @dataclass(kw_only=True)
 class ScipyFIRContainer(ScipyLinearFilterContainer):
-    ripple: float = 1.0
+    window: str | tuple = 'hamming'
+    fir_type: Literal[1, 2] = 1
 
     def __post_init__(self):
+        """
+        Implementation
+        ---------------
+        Ensure order is odd for Type I and even for Type II FIR filters
+        """
         super().__post_init__()
-        if not isinstance(self.ripple, (float, int)) or self.ripple <= 0:
-            raise FilterInitializerError("Ripple must be a positive number.")
+        if self.fir_type == 1:
+            self.order = self.order | 1 
+        elif self.fir_type == 2:
+            self.order = self.order & ~1
+        else:
+            raise FilterInitializerError("FIR type must be either 1 or 2.")
+        self.output = None
+        self.analog = False
 
-
-numtaps, cutoff, width=None, window='hamming', pass_zero=True, scale=True, fs=None
 
 class BaseScipyFilter:
     filter_ = TypedMutableDescr(ScipyLinearFilterContainer)
@@ -147,8 +157,35 @@ class Chebyshev1Filter(BaseDigitalFilter, BaseScipyFilter):
         return filt_signal
 
 
+class FIRFilter(BaseDigitalFilter, BaseScipyFilter):
+    def __init__(self):
+        self.name = "firwin"
 
+    @override
+    def design(self, /, **kwargs) -> None:
+        self._filter_ = save_init_kwargs(ScipyFIRContainer, **kwargs)
+        self.model = sg.firwin(
+            numtaps=self._filter_.order,
+            cutoff=self._filter_.cutoff,
+            window=self._filter_.window,
+            pass_zero=self._filter_.btype,
+            fs=self._filter_.sr
+        )
+    
+    @override
+    def apply(
+        self,
+        signal: np.ndarray,
+        mode: Literal['filtfilt', 'filt']='filtfilt',
+        **kwargs
+     ) -> np.ndarray:
+        if not hasattr(self, 'model'):
+            raise FilterApplyModeError("Filter has not been designed yet. Call the `design` method first.")
+        if mode not in ['filtfilt', 'filt']:
+            raise FilterApplyModeError("Invalid mode specified. Use 'filtfilt' or 'filt'.")
+        
+        func = sg.filtfilt if mode == 'filtfilt' else sg.lfilter
+        params = {'b': self.model, 'a': 1, 'x': signal} | kwargs
+        filt_signal = func(**params)
 
-
-
-firwin(
+        return filt_signal
