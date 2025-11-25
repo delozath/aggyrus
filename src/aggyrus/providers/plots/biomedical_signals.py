@@ -92,13 +92,13 @@ class BiomedicalSignalPlot(BaseContainerPlot[BiomedicalSignalRecord]):
         Returns
         -------
         Any"""
-        num_channels = signal.data.shape[1]
+        num_channels = min(signal.data.shape)
         name_channels = (
             signal.chn_names 
             if num_channels == len(signal.chn_names) 
             else [f'channel_{c}' for c in range(num_channels)]
         )
-        
+                
         fig, axes = plt.subplots(num_channels, 1, figsize=(18, 1.1 * num_channels), sharex=True)
         for i, (ax, x, cname) in enumerate(zip(axes, signal.data.T, name_channels)):
             ax.plot(time, x, label=cname)

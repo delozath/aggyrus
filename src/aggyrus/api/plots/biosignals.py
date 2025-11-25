@@ -1,0 +1,1 @@
+from aggyrus.providers.plots.biomedical_signals import BiomedicalSignalPlot as BiosignalChannels
