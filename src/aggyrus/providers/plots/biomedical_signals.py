@@ -39,7 +39,7 @@ class BiomedicalSignalPlot(BaseContainerPlot[BiomedicalSignalRecord]):
         -------
         Any
         """
-        time = np.arange(len(signal.data)) / signal.sr
+        time = np.arange(max(signal.data.shape)) / signal.sr
         self._plot_factory(signal, time, **kwargs)
     
     def _plot_factory(self, signal: BiomedicalSignalRecord, time: np.ndarray, /, **kwargs) -> Any:
@@ -98,9 +98,11 @@ class BiomedicalSignalPlot(BaseContainerPlot[BiomedicalSignalRecord]):
             if num_channels == len(signal.chn_names) 
             else [f'channel_{c}' for c in range(num_channels)]
         )
-                
+
+        orientation = signal.data.shape
+        X = signal.data if orientation[0] < orientation[1] else signal.data.T
         fig, axes = plt.subplots(num_channels, 1, figsize=(18, 1.1 * num_channels), sharex=True)
-        for i, (ax, x, cname) in enumerate(zip(axes, signal.data.T, name_channels)):
+        for i, (ax, x, cname) in enumerate(zip(axes, X, name_channels)):
             ax.plot(time, x, label=cname)
             ax.set_title(f"{cname}", fontsize=10)
             ax.set_ylabel("Amplitude", fontsize=8)

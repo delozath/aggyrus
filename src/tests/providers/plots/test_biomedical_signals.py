@@ -1,3 +1,4 @@
+import trace
 import pytest
 
 
@@ -42,6 +43,15 @@ def test_BiomedicalSignalPlot_plot_multiple_channel(signal_plot):
     signal_2 = gen_signal(freqs=np.array([2.0, 8.0, 15.0]))
 
     x = np.concatenate([signal[:, None], signal_2[:, None], signal[:, None], signal_2[:, None], signal[:, None], signal_2[:, None]], axis=1)
+    record_multi = BiomedicalSignalRecord(data=x, chn_names=["channel_-1", "channel_-2", "channel_3", "channel_4", "channel_0", "channel_6"], sr=SR)
+    result = signal_plot.plot(record_multi)
+    signal_plot.show()
+
+def test_BiomedicalSignalPlot_plot_multiple_channel_transpose(signal_plot):
+    signal = gen_signal()
+    signal_2 = gen_signal(freqs=np.array([2.0, 8.0, 15.0]))
+
+    x = np.concatenate([signal[:, None], signal_2[:, None], signal[:, None], signal_2[:, None], signal[:, None], signal_2[:, None]], axis=1).T
     record_multi = BiomedicalSignalRecord(data=x, chn_names=["channel_-1", "channel_-2", "channel_3", "channel_4", "channel_0", "channel_6"], sr=SR)
     result = signal_plot.plot(record_multi)
     signal_plot.show()
