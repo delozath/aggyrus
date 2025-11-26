@@ -1,4 +1,4 @@
-from typing import override, Literal, Callable, Dict, Tuple, Any
+from typing import override, Literal, Callable, Dict, Tuple, Any, Self
 from dataclasses import dataclass, field
 
 
@@ -91,7 +91,7 @@ class ButterworthFilter(BaseDigitalFilter, BaseScipyFilter):
         self.name = "butterworth"
 
     @override
-    def design(self, /, **kwargs) -> None:
+    def design(self, /, **kwargs) -> Self | None:
         self._filter_ = save_init_kwargs(ScipyLinearFilterContainer, **kwargs)
         self.model = sg.butter(
                 N=self._filter_.order,
@@ -101,6 +101,7 @@ class ButterworthFilter(BaseDigitalFilter, BaseScipyFilter):
                 output=self._filter_.output,
                 fs=self._filter_.sr
          )
+        return self
 
     @override
     def apply(
@@ -126,7 +127,7 @@ class Chebyshev1Filter(BaseDigitalFilter, BaseScipyFilter):
         self.name = "chebyshev_type_1"
 
     @override
-    def design(self, /, **kwargs) -> None:
+    def design(self, /, **kwargs) -> Self | None:
         self._filter_ = save_init_kwargs(ScipyChebyshev1FilterContainer, **kwargs)
         self.model = sg.cheby1(
                 N=self._filter_.order,
@@ -162,7 +163,7 @@ class FIRFilter(BaseDigitalFilter, BaseScipyFilter):
         self.name = "firwin"
 
     @override
-    def design(self, /, **kwargs) -> None:
+    def design(self, /, **kwargs) -> Self | None:
         self._filter_ = save_init_kwargs(ScipyFIRContainer, **kwargs)
         self.model = sg.firwin(
             numtaps=self._filter_.order,

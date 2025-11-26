@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+from typing import Self
 
 import numpy as np
 
@@ -12,5 +13,5 @@ class BaseDigitalFilter(ABC):
         ...
 
     @abstractmethod
-    def design(self, *args, **kwargs):
+    def design(self, *args, **kwargs)  -> Self | None :
         ...
