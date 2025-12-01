@@ -2,6 +2,7 @@ import enum
 from typing import Any
 from matplotlib import pyplot as plt
 
+from itertools import cycle
 
 import numpy as np
 
@@ -10,6 +11,19 @@ from aggyrus.core.signals._time_serie_types import BiomedicalSignalRecord
 from aggyrus.spi.plots import BaseContainerPlot
 
 class BiomedicalSignalPlot(BaseContainerPlot[BiomedicalSignalRecord]):
+    COLORS = [
+        "#440154",
+        "#FDE725",
+        "#3E4A89",
+        "#B4DD2C",
+        "#31688E",
+        "#6DCD59",
+        "#482878",
+        "#35B779",
+        "#26828E",
+        "#1F9E89"
+    ]
+
     """
     class for plotting biomedical signals.
 
@@ -99,16 +113,25 @@ class BiomedicalSignalPlot(BaseContainerPlot[BiomedicalSignalRecord]):
             else [f'channel_{c}' for c in range(num_channels)]
         )
 
+        func =  self._span if len(signal.segments) > 0 else (lambda *args, **kwargs: None)
         orientation = signal.data.shape
         X = signal.data if orientation[0] < orientation[1] else signal.data.T
+        seg_scale = signal.segments/signal.sr if (signal.segments > time[-1]).any() else signal.segments
+
         fig, axes = plt.subplots(num_channels, 1, figsize=(18, 1.1 * num_channels), sharex=True)
         for i, (ax, x, cname) in enumerate(zip(axes, X, name_channels)):
             ax.plot(time, x, label=cname)
+            func(seg_scale, ax)
             ax.set_title(f"{cname}", fontsize=10)
             ax.set_ylabel("Amplitude", fontsize=8)
             ax.grid()
         axes[-1].set_xlabel("Time (s)")
         plt.tight_layout()
+    
+    def _span(self, segments, ax):
+        for c, seg in zip(cycle(self.COLORS), segments):
+            x0, x1 = seg
+            ax.axvspan(x0, x1, color=c, alpha=0.5)
 
     def show(self, /, **kwargs) -> None:
         if len(kwargs) > 0:
