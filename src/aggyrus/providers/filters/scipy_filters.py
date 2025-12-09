@@ -138,6 +138,8 @@ class Chebyshev1Filter(BaseDigitalFilter, BaseScipyFilter):
                 output=self._filter_.output,
                 fs=self._filter_.sr
          )
+        
+        return self
 
     @override
     def apply(
